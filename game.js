@@ -1,22 +1,53 @@
 let totalPoints = 0;
-let pointsPerSecond = 1;
-let upgradeCost = 10;
+let upgrades = [
+    { id: 1, cost: 10, pointsPerSecond: 1, purchased: false },
+    { id: 2, cost: 50, pointsPerSecond: 5, purchased: false },
+    { id: 3, cost: 100, pointsPerSecond: 10, purchased: false },
+    // Add more upgrades as desired...
+];
 
 function generatePoints() {
-    totalPoints += pointsPerSecond;
+    let pointsToAdd = upgrades.reduce((sum, upgrade) => {
+        return sum + (upgrade.purchased ? upgrade.pointsPerSecond : 0);
+    }, 0);
+    totalPoints += pointsToAdd;
     document.getElementById('points_display').innerText = `Points: ${totalPoints}`;
 }
 
-// Call generatePoints every second
 setInterval(generatePoints, 1000);
 
-function upgradePG() {
-    if (totalPoints >= upgradeCost) {
-        totalPoints -= upgradeCost;
-        pointsPerSecond *= 1.2; // For example, increase the points per second by 20%
-        upgradeCost *= 1.5; // Increase the upgrade cost by 50%
-        document.getElementById('points_display').innerText = `Points: ${totalPoints}`;
+function purchaseUpgrade(upgradeId) {
+    let upgrade = upgrades.find(u => u.id === upgradeId);
+    if (upgrade && totalPoints >= upgrade.cost && !upgrade.purchased) {
+        totalPoints -= upgrade.cost;
+        upgrade.purchased = true;
+        document.getElementById(`upgrade_${upgradeId}`).disabled = true;
+        updateDisplay();
     } else {
-        console.log("Not enough points to upgrade!");
+        console.log("Cannot purchase upgrade.");
     }
 }
+
+function updateDisplay() {
+    document.getElementById('points_display').innerText = `Points: ${totalPoints}`;
+    upgrades.forEach(upgrade => {
+        let upgradeButton = document.getElementById(`upgrade_${upgrade.id}`);
+        if (upgradeButton) {
+            upgradeButton.innerText = `Upgrade ${upgrade.id} - Cost: ${upgrade.cost}`;
+            upgradeButton.disabled = upgrade.purchased;
+        }
+    });
+}
+
+// Initial display setup
+document.addEventListener('DOMContentLoaded', () => {
+    let upgradesContainer = document.getElementById('upgrades_container');
+    upgrades.forEach(upgrade => {
+        let button = document.createElement('button');
+        button.id = `upgrade_${upgrade.id}`;
+        button.innerText = `Upgrade ${upgrade.id} - Cost: ${upgrade.cost}`;
+        button.onclick = () => purchaseUpgrade(upgrade.id);
+        upgradesContainer.appendChild(button);
+    });
+    updateDisplay();
+});
